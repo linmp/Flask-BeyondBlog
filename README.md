@@ -1,7 +1,7 @@
 # Flask-Blog-Python3
 An Open Source Blog System that developed with Flask and Python3.
 ---
-###为什么想搭建个博客呢?
+### 为什么想搭建个博客呢?
 1. 大概去年这个时候我就很想找些博客代码来参考和学习
 2. 想搭建个属于自己的博客
 3. Python3并且是flask搭建的博客很少
