@@ -12,7 +12,7 @@ def upload_pic(path, img):
     调用这个方法的时候
     1.from app.oss import upload
     2.upload.upload_pic(path,images)
-    :param path: 这里是上传到oos里面的哪个文件夹,例如：path = "shujujiegou/"
+    :param path: 这里是上传到oos里面的哪个文件夹,例如：path = "first/"
     :param img: 这里是接收的图片
     :return: 返回的是图片上传后的具体url
     """
