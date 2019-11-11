@@ -15,7 +15,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 编号
     username = db.Column(db.String(100), unique=True)  # 用户名　（唯一的）
     password = db.Column(db.String(100))  # 密码
-    gender = db.Column(db.String(10))  # 性别
+    gender = db.Column(db.String(10), default=0)  # 性别
     avatar = db.Column(db.String(100))  # 照片路由
     info = db.Column(db.TEXT)  # 简介
     email = db.Column(db.String(100), unique=True)  # 邮箱（唯一的）
@@ -65,7 +65,7 @@ class Blog(db.Model):
     status = db.Column(db.Integer)  # 文章状态 1发表可见 2保存草稿不发表 3屏蔽不可见
     tag = db.relationship("Tag", backref="blog")  # 标签
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 所属用户
-    comment = db.relationship('Comment', backref='article')  # 评论外键关系关联
+    comment = db.relationship('Comment', backref='blog')  # 评论外键关系关联
     page_view = db.Column(db.Integer, default=0)  # 浏览次数
     like_number = db.Column(db.Integer, default=0)  # 点赞次数
     comment_number = db.Column(db.Integer, default=0)  # 评论次数
@@ -135,7 +135,7 @@ class Comment(db.Model):
     recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 接收者
     content = db.Column(db.TEXT)  # 回复内容
     type = db.Column(db.Integer)  # 类型，1是评论，2是回复
-    blog_id = db.Column(db.Integer, db.ForeignKey('article.id'))  # 所属博客文章
+    blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'))  # 所属博客文章
     add_time = db.Column(db.DateTime, index=True, default=datetime.now)  # 添加时间
 
     def __repr__(self):
@@ -233,3 +233,7 @@ class Board(db.Model):
 
     def __repr__(self):
         return "<Board %r>" % self.title
+
+
+if __name__ == '__main__':
+    db.create_all()
