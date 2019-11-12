@@ -93,7 +93,7 @@ def login():
     # 校验参数
     # 参数完整的校验
     if not all([email, password]):
-        return jsonify(re_code=400, msg="参数不完整")
+        return jsonify(re_code=400, msg="参数不完整.")
 
     try:
         user = User.query.filter_by(email=email).first()

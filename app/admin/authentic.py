@@ -1,6 +1,7 @@
 from . import admin
+from app import db
 from flask import request, jsonify, current_app, session
-from app.models import Admin
+from app.models import Admin, AdminLoginLog
 from app.utils.tool import admin_login_required
 
 
@@ -28,10 +29,19 @@ def login():
     if admin_info is None or admin_info.password != password:
         return jsonify(re_code=400, msg="用户名或密码错误")
 
+    # 添加管理员登录日志
+    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    admin_login_log = AdminLoginLog(admin_id=admin_info.id, ip=ip_addr)
+    try:
+        db.session.add(admin_login_log)
+        db.session.commit()
+    except:
+        db.session.rollback()
+
     # 如果验证相同成功，保存登录状态， 在session中
     session["username"] = admin_info.username
     session["admin_id"] = admin_info.id
-    session["avatar"] = admin_info.avatar_url
+    session["avatar"] = admin_info.avatar
 
     return jsonify(re_code=200, msg="登录成功")
 
@@ -49,7 +59,7 @@ def check_login():
         return jsonify(re_code=200, msg="true",
                        data={"username": username, "admin_id": admin_id, "avatar": avatar})
     else:
-        return jsonify(re_code=400, msg="用户未登录")
+        return jsonify(re_code=400, msg="管理员未登录")
 
 
 # 登出

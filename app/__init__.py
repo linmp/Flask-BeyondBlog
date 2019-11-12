@@ -44,6 +44,6 @@ def create_app(config_name):
     # 注册蓝图
     from app import main, admin
     app.register_blueprint(main.main, url_prefix="/main")
-    app.register_blueprint(main.main, url_prefix="/admin")
+    app.register_blueprint(admin.admin, url_prefix="/admin")
 
     return app

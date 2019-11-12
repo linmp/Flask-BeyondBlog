@@ -1,6 +1,7 @@
 from . import db
 from datetime import datetime
 
+
 """
 python3 manage.py db init
 python3 manage.py db migrate -m "message"
@@ -101,7 +102,7 @@ class CollectBlogArticle(db.Model):
 
 
 # 关注
-class FOllow(db.Model):
+class Follow(db.Model):
     __tablename__ = 'follow'
     follower_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                             primary_key=True)  # 关注者
@@ -173,6 +174,7 @@ class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 编号
     username = db.Column(db.String(100), unique=True)  # 管理员用户名　（唯一的）
     password = db.Column(db.String(100))  # 管理员密码
+    avatar = db.Column(db.String(100))  # 头像路由
     authority = db.Column(db.Integer)  # 权限等级
     create_time = db.Column(db.DateTime, default=datetime.now)  # 记录的创建时间
     update_time = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)  # 记录的最近上线时间
@@ -237,3 +239,7 @@ class Board(db.Model):
 
 if __name__ == '__main__':
     db.create_all()
+
+
+
+
