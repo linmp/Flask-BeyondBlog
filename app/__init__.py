@@ -21,7 +21,7 @@ def create_app(config_name):
     :param config_name: str  配置模式的模式的名字 （"develop",  "product"）
     :return:
     """
-    app = Flask(__name__)  # ,static_url_path=None
+    app = Flask(__name__)
 
     # 根据配置模式的名字获取配置参数的类
     config_class = config_map.get(config_name)
@@ -39,7 +39,6 @@ def create_app(config_name):
 
     # 为flask补充csrf防护
     CSRFProtect(app)
-
 
     # 注册蓝图
     from app import main, admin
