@@ -53,14 +53,8 @@ def createImg():
     # 获取图片画笔，用于描绘字
     draw = ImageDraw.Draw(img)
     # 修改字体
-    # font = ImageFont.truetype(font=dirs+"/fonts/Arial.ttf", size=36)
-    # 三种字体随机切换
-    index = random.randint(0, 2)
-    afont = dirs + "/fonts/Arial.ttf"
-    bfont = dirs + "/fonts/Georgia.ttf"
-    cfont = dirs + "/fonts/actionj.ttf"
-    f = {0: afont, 1: bfont, 2: cfont}
-    font = ImageFont.truetype(font=f[index], size=36)
+    font = ImageFont.truetype(font=dirs+"/fonts/Arial.ttf", size=36)
+
     str_of_code = ''
     for i in range(5):
         # 随机生成5种字符+5种颜色
