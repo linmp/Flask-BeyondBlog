@@ -198,6 +198,15 @@ class AdminLoginLog(db.Model):
     def __repr__(self):
         return "<AdminLoginLog %r>" % self.admin_id
 
+    def to_dict(self):
+        """将对象转换为字典数据"""
+        login_log_dict = {
+            "admin_id": self.admin_id,
+            "ip": self.ip,
+            "add_time": self.add_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        return login_log_dict
+
 
 # 管理员操作日志
 class AdminOperateLog(db.Model):
@@ -210,6 +219,17 @@ class AdminOperateLog(db.Model):
 
     def __repr__(self):
         return "<AdminOperateLog %r>" % self.admin_id
+
+    def to_dict(self):
+        """将对象转换为字典数据"""
+        operate_log_dict = {
+            "id":self.id,
+            "admin_id": self.admin_id,
+            "ip": self.ip,
+            "detail": self.detail,
+            "add_time": self.add_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        return operate_log_dict
 
 
 # 标签

@@ -1,4 +1,8 @@
 from . import admin
+from app import db
+from app.utils.tool import admin_login_required
+from app.models import Board, AdminOperateLog
+from flask import g, request, jsonify, session
 
 
 # 新增标签
@@ -51,8 +55,33 @@ def change_background():
 
 # 发送公告
 @admin.route("/bulletin/board", methods=["POST"])
+@admin_login_required
 def bulletin_board():
-    pass
+    admin_id = g.admin_id  # 获取管理员的id
+    admin_name = session.get("username")  # 获取管理员的名字
+    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    req_dict = request.get_json()
+    title = req_dict.get("title")
+    content = req_dict.get("content")
+
+    # 校验参数
+    # 参数完整的校验
+    if not all([title, content, ip_addr]):
+        return jsonify(re_code=400, msg="参数不完整")
+
+    # 将数据保存
+    board = Board(title=title, content=content, admin_id=admin_id)
+
+    try:
+        detail = "管理员 用户名:%s  id:%s  新发送了公告 <%s> " % (admin_name, admin_id, title)
+        admin_operate_log = AdminOperateLog(admin_id=admin_id, ip=ip_addr, detail=detail)
+        db.session.add(board)
+        db.session.add(admin_operate_log)
+        db.session.commit()
+        return jsonify(re_code=200, msg="保存数据成功")
+    except:
+        db.session.rollback()
+        return jsonify(re_code=400, msg="保存数据失败")
 
 
 # 私信博主
@@ -64,12 +93,6 @@ def message():
 # 统计浏览量
 @admin.route("views/numbers", methods=["POST"])
 def views_numbers_count():
-    pass
-
-
-# 获取登录日志
-@admin.route("/login/log", methods=["GET"])
-def login_log():
     pass
 
 
