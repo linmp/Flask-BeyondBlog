@@ -5,6 +5,7 @@ import os
 ADMIN_USERNAME = "admin_beyond_lam"
 ADMIN_PASSWORD = "admin_password"
 ADMIN_AVATAR_URL = "https://images.pexels.com/photos/3031397/pexels-photo-3031397.jpeg"
+ADMIN_POWER = 32
 
 # Mysql数据库信息配置
 SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")

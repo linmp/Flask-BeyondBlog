@@ -1,7 +1,7 @@
 from . import admin
 from app import db
 from app.utils.tool import admin_login_required
-from app.models import Board, AdminOperateLog
+from app.models import Board, AdminOperateLog, Admin
 from flask import g, request, jsonify, session
 
 
@@ -19,14 +19,124 @@ def delete_tag():
 
 # 新增管理员
 @admin.route("/manager", methods=["POST"])
+@admin_login_required
 def add_manager():
-    pass
+    """
+    需要的用户信息
+        管理员用户名
+        管理员密码
+        管理员权限等级 1 2 4 8 16 32
+    注意:
+        管理员只能创建权限比自己小的子管理员
+        32 权限的管理员是超级管理员
+
+    :return:
+    """
+    admin_id = g.admin_id
+    admin_name = session.get("username")  # 获取管理员的名字
+    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    req_dict = request.get_json()
+    new_admin_username = req_dict.get("username")
+    new_admin_password = req_dict.get("password")
+    new_admin_power = req_dict.get("power")
+
+    # 校验参数
+    # 参数完整的校验
+    if not all([new_admin_username, new_admin_password, ip_addr, new_admin_power]):
+        return jsonify(re_code=400, msg="参数不完整")
+
+    # 获取当前管理员的信息
+    current_admin = Admin.query.get(admin_id)
+    if not current_admin:
+        return jsonify(re_code=400, msg="当前管理员出错")
+
+    # 获取当前管理员的权限
+    current_admin_power = current_admin.authority
+    if not current_admin_power:
+        current_admin_power = 1
+    else:
+        current_admin_power = int(current_admin_power)
+
+    # 判断当前管理员的权限是否比新管理员权限大
+    if current_admin_power > new_admin_power:
+        new_admin = Admin(username=new_admin_username, password=new_admin_password, authority=new_admin_power)
+        try:
+            db.session.add(new_admin)
+            detail = "管理员:%s --> id:%s ;  添加了新管理员:%s " % (admin_name, admin_id, new_admin_username)
+            admin_operate_log = AdminOperateLog(admin_id=admin_id, ip=ip_addr, detail=detail)
+            db.session.add(admin_operate_log)
+            db.session.commit()
+            return jsonify(re_code=200, msg="添加管理员成功")
+        except:
+            db.session.rollback()
+            return jsonify(re_code=400, msg="保存数据失败,或许用户名冲突,请稍后再试")
+    else:
+        return jsonify(re_code=400, msg="当前管理员无法添加此权限用户")
 
 
 # 删除管理员
 @admin.route("/manager", methods=["DELETE"])
+@admin_login_required
 def delete_manager():
-    pass
+    """
+    需要的用户信息
+        管理员用户名
+    判断
+        当前管理员的权限是否大于等于16
+        只有大于等于16的管理员才能删管理员
+    :return:
+    """
+    admin_id = g.admin_id
+    admin_name = session.get("username")  # 获取管理员的名字
+    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    req_dict = request.get_json()
+    delete_admin_username = req_dict.get("username")
+
+    # 参数完整的校验
+    if not all([delete_admin_username, ip_addr]):
+        return jsonify(re_code=400, msg="参数不完整")
+
+    # 获取当前管理员的信息
+    current_admin = Admin.query.get(admin_id)
+    if not current_admin:
+        return jsonify(re_code=400, msg="当前管理员出错")
+
+    # 获取当前管理员的权限
+    current_admin_power = current_admin.authority
+    if not current_admin_power:
+        current_admin_power = 1
+    else:
+        current_admin_power = int(current_admin_power)
+
+    if current_admin_power < 16:
+        return jsonify(re_code=400, msg="当前管理员权利不够删除管理员")
+
+    # 执行操作
+    if current_admin_power >= 16:
+        delete_admin = Admin.query.filter_by(username=delete_admin_username).first()
+        if not delete_admin:
+            return jsonify(re_code=400, msg="查询不到将要删除的管理员")
+
+        # 如果删除的是超级管理员
+        if delete_admin.authority > current_admin_power:
+            return jsonify(re_code=400, msg="当前管理员权利不够删除此管理员")
+
+        # 如果删除的是自己
+        if delete_admin.username == admin_name:
+            return jsonify(re_code=400, msg="不能删除自己信息")
+
+        try:
+            db.session.delete(delete_admin)
+            detail = "管理员:%s --> id:%s ;  删除了管理员:%s " % (admin_name, admin_id, delete_admin_username)
+            admin_operate_log = AdminOperateLog(admin_id=admin_id, ip=ip_addr, detail=detail)
+            db.session.add(admin_operate_log)
+            db.session.commit()
+            return jsonify(re_code=200, msg="删除管理员成功!")
+
+        except:
+            db.session.rollback()
+            return jsonify(re_code=400, msg="执行操作失败")
+    return jsonify(re_code=400, msg="未知错误")
 
 
 # 删除博客
@@ -73,7 +183,7 @@ def bulletin_board():
     board = Board(title=title, content=content, admin_id=admin_id)
 
     try:
-        detail = "管理员 用户名:%s  id:%s  新发送了公告 <%s> " % (admin_name, admin_id, title)
+        detail = "管理员:%s --> id:%s ; 新发送了公告 <%s> " % (admin_name, admin_id, title)
         admin_operate_log = AdminOperateLog(admin_id=admin_id, ip=ip_addr, detail=detail)
         db.session.add(board)
         db.session.add(admin_operate_log)

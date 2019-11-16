@@ -20,6 +20,7 @@ An Open Source Blog System that developed with Flask and Python3.
 4. 管理员发送公告  /admin/bulletin/board
 5. 获取管理员登录日志  /admin/login/log
 6. 获取管理员操作日志 /admin/operate/log
+
 ...
 
 ---
