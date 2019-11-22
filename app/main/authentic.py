@@ -1,7 +1,7 @@
 from . import main
 from flask import request, jsonify, current_app, session
 from app import db, redis_store
-from app.models import User
+from app.models import User, UserLoginLog
 from app.utils.tool import user_login_required
 
 
@@ -105,11 +105,20 @@ def login():
     if user is None or user.password != password:
         return jsonify(re_code=400, msg="用户名或密码错误")
 
+    # 添加管理员登录日志
+    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    user_login_log = UserLoginLog(user_id=user.id, ip=ip_addr)
+    try:
+        db.session.add(user_login_log)
+        db.session.commit()
+    except:
+        db.session.rollback()
+
     # 如果验证相同成功，保存登录状态， 在session中
     session["username"] = user.username
     session["email"] = user.email
     session["user_id"] = user.id
-    session["avatar"] = user.avatar_url
+    session["avatar"] = user.avatar
 
     return jsonify(re_code=200, msg="登录成功")
 

@@ -201,13 +201,13 @@ def message():
 
 
 # 统计浏览量
-@admin.route("views/numbers", methods=["POST"])
+@admin.route("/views/numbers", methods=["POST"])
 def views_numbers_count():
     pass
 
 
 # 任务板
-@admin.route("task", methods=["POST"])
+@admin.route("/task", methods=["POST"])
 def task_board():
     pass
 
