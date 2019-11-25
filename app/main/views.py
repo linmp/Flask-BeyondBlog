@@ -47,7 +47,7 @@ def follow():
 
 # 取消删除博主
 @main.route("/follow", methods=["DELETE"])
-def unfollow():
+def un_follow():
     pass
 
 
@@ -87,13 +87,7 @@ def blog_search():
     pass
 
 
-# 找回密码
-@main.route("/password", methods=["POST"])
-def find_password():
-    pass
 
 
-# 更新密码
-@main.route("/password", methods=["PUT"])
-def change_password():
-    pass
+
+
