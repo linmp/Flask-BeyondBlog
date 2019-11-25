@@ -1,0 +1,55 @@
+# API 
+- frined
+	- POST
+		- 加好友
+	- DELETE
+		- 删好友
+- comment
+	- POST
+		- 评论或者回复
+	- DELETE
+		- 删除评论
+- blog/collect
+	- POST
+		- 收藏博客
+	- DELETE
+		- 删除博客
+- follow
+	- POST
+		- 关注
+	- DELETE
+		- 取消关注
+- like
+	- POST
+		- 点赞
+	- DELETE
+		- 取消点赞
+- blog/article/detail
+	- POST
+		- 获取博客详情
+	- GET
+		- 未登录的时候获取的文章详情
+- blog/search
+	- POST
+		- 搜索
+- message
+	- POST
+		- 私信
+- user/data
+	- GET
+		- 获取用户自己的信息
+- login
+	- POST
+		- 登录
+- register
+	- POST
+		- 注册
+- logout
+	- DELETE
+		- 退出登录
+- password
+	- POST
+		- 找回密码
+- password
+	- PUT
+		- 更新密码
