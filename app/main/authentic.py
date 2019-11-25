@@ -1,7 +1,7 @@
 from . import main
 from flask import request, jsonify, current_app, session
 from app import db, redis_store
-from app.models import User, UserLoginLog
+from app.models import User, UserLoginLog, UserOperateLog
 from app.utils.tool import user_login_required
 
 
@@ -105,7 +105,7 @@ def login():
     if user is None or user.password != password:
         return jsonify(re_code=400, msg="用户名或密码错误")
 
-    # 添加管理员登录日志
+    # 添加用户登录日志
     ip_addr = request.remote_addr  # 获取管理员登录的ip
     user_login_log = UserLoginLog(user_id=user.id, ip=ip_addr)
     try:
@@ -148,3 +148,53 @@ def logout():
     # 清除session数据
     session.clear()
     return jsonify(re_code=200, msg="成功退出登录!")
+
+
+# 修改密码
+@main.route("/password", methods=["PUT"])
+@user_login_required
+def change_password():
+    """ 修改密码 """
+    # 获取参数
+    req_dict = request.get_json()
+    username = session.get("username")
+    password = req_dict.get("password")
+    new_password = req_dict.get("new_password")
+
+    # 校验参数
+    # 参数完整的校验
+    if not all([new_password, password,username]):
+        return jsonify(re_code=400, msg="参数不完整.")
+
+    try:
+        user = User.query.filter_by(username=username).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(re_code=400, msg="获取用户信息失败")
+
+    # 用数据库的密码与用户填写的密码进行对比验证
+    if user is None or user.password != password:
+        return jsonify(re_code=400, msg="原密码密码错误")
+
+    # 修改密码
+    user.password = new_password
+
+    # 添加用户操作日志
+    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    operate_detail = "用户id:%r 用户名:%s,修改了密码" % (user.id, username)
+    user_operate_log = UserOperateLog(user_id=user.id, ip=ip_addr, detail=operate_detail)
+    try:
+        db.session.add(user)
+        db.session.add(user_operate_log)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return jsonify(re_code=400, msg="修改密码失败,请稍后重试!")
+
+    return jsonify(re_code=200, msg="修改密码成功!")
+
+
+# 找回密码
+@main.route("/password", methods=["POST"])
+def find_password():
+    pass
