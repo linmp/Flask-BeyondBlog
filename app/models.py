@@ -1,7 +1,6 @@
 from . import db
 from datetime import datetime
 
-
 """
 python3 manage.py db init
 python3 manage.py db migrate -m "message"
@@ -64,8 +63,8 @@ class Blog(db.Model):
     summary = db.Column(db.TEXT)  # 简介
     logo = db.Column(db.String(200))  # 封面
     status = db.Column(db.Integer)  # 文章状态 1发表可见 2保存草稿不发表 3屏蔽不可见
-    tag = db.relationship("Tag", backref="blog")  # 标签
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 所属用户
+    tag = db.relationship("Tag", backref="blog")  # 标签
     comment = db.relationship('Comment', backref='blog')  # 评论外键关系关联
     page_view = db.Column(db.Integer, default=0)  # 浏览次数
     like_number = db.Column(db.Integer, default=0)  # 点赞次数
@@ -119,7 +118,7 @@ class Message(db.Model):
     __tablename__ = 'message'
     id = db.Column(db.Integer, primary_key=True)  # 编号
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 发送者
-    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 发送者
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 接收者
     content = db.Column(db.TEXT)  # 内容
     add_time = db.Column(db.DateTime, index=True, default=datetime.now)  # 添加时间
 
@@ -223,7 +222,7 @@ class AdminOperateLog(db.Model):
     def to_dict(self):
         """将对象转换为字典数据"""
         operate_log_dict = {
-            "id":self.id,
+            "id": self.id,
             "admin_id": self.admin_id,
             "ip": self.ip,
             "detail": self.detail,
@@ -237,7 +236,7 @@ class Tag(db.Model):
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)  # 编号
     blog_id = db.Column(db.Integer, db.ForeignKey("blog.id"), nullable=False)  # 所属的文章编号
-    name = db.Column(db.String(20))
+    name = db.Column(db.String(20))  # 标签名字
     add_time = db.Column(db.DateTime, index=True, default=datetime.now)  # 添加时间
 
     def __repr__(self):
@@ -259,7 +258,3 @@ class Board(db.Model):
 
 if __name__ == '__main__':
     db.create_all()
-
-
-
-
