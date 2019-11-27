@@ -53,6 +53,21 @@ class User(db.Model):
     def __repr__(self):
         return "<User %r>" % self.username
 
+    def to_dict(self):
+        """将对象转换为字典数据"""
+        operate_log_dict = {
+            "user_id": self.id,
+            "username": self.username,
+            "gender": self.gender,
+            "avatar": self.avatar,
+            "info": self.info,
+            "degree": self.degree,
+            "email": self.email,
+            "create_time": self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "update_time": self.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        return operate_log_dict
+
 
 # 博客信息
 class Blog(db.Model):

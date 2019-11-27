@@ -9,6 +9,10 @@ import json
 @admin.route("/login/log", methods=["GET"])
 @admin_login_required
 def login_log():
+    """
+    等待优化---> 加入缓存
+    :return:
+    """
     admin_id = g.admin_id
     admin_login_logs = AdminLoginLog.query.filter_by(admin_id=admin_id).all()
     admin_log_li = []

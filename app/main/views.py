@@ -69,25 +69,7 @@ def message():
     pass
 
 
-# 获取个人信息
-@main.route("/profile", methods=["POST"])
-def get_profile():
-    pass
-
-
-# 修改个人信息
-@main.route("/profile", methods=["POST"])
-def change_profile():
-    pass
-
-
 # 搜索
 @main.route("/blog/search", methods=["POST"])
 def blog_search():
     pass
-
-
-
-
-
-
