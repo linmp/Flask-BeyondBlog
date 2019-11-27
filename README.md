@@ -38,7 +38,7 @@ An Open Source Blog System that developed with Flask and Python3.
 2. 登录状态  /main/session
 3. 登出  /main/session
 4. 修改密码  /main/password
-
+5. 获取某用户的信息 /main/profile
 ...
 
 
@@ -50,3 +50,4 @@ An Open Source Blog System that developed with Flask and Python3.
 - [ ] 异步celery使用
 - [ ] 异步发送邮箱
 - [ ] 添加websocket
+- [ ] 日志和用户信息应该加入redis缓存
