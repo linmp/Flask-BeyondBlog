@@ -56,3 +56,7 @@ An Open Source Blog System that developed with Flask and Python3.
 - [ ] 异步发送邮箱
 - [ ] 添加websocket
 - [ ] 日志和用户信息应该加入redis缓存
+
+
+
+---
