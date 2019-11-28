@@ -34,11 +34,16 @@ An Open Source Blog System that developed with Flask and Python3.
 
 #### 用户
 
-1. 登录  /main/login
-2. 登录状态  /main/session
-3. 登出  /main/session
-4. 修改密码  /main/password
-5. 获取某用户的信息 /main/profile
+- 登录  /main/login
+- 登录状态  /main/session
+- 登出  /main/session
+- 修改密码  /main/password
+- 获取某用户的信息 /main/user/profile/<user_id>
+- 修改头像 /main/user/avatar
+- 修改用户名 /main/user/username
+- 修改个人简介 /main/user/info
+- 修改性别 /main/user/gender
+
 ...
 
 
