@@ -106,7 +106,7 @@ def login():
         return jsonify(re_code=400, msg="用户名或密码错误")
 
     # 添加用户登录日志
-    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    ip_addr = request.remote_addr  # 获取用户登录的ip
     user_login_log = UserLoginLog(user_id=user.id, ip=ip_addr)
     try:
         db.session.add(user_login_log)
