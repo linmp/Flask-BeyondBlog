@@ -55,7 +55,7 @@ class User(db.Model):
 
     def to_dict(self):
         """将对象转换为字典数据"""
-        operate_log_dict = {
+        user_dict = {
             "user_id": self.id,
             "username": self.username,
             "gender": self.gender,
@@ -66,7 +66,7 @@ class User(db.Model):
             "create_time": self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
             "update_time": self.update_time.strftime("%Y-%m-%d %H:%M:%S")
         }
-        return operate_log_dict
+        return user_dict
 
 
 # 博客信息
