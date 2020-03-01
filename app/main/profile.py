@@ -21,9 +21,6 @@ def get_profile(user_id):
     等级
     :return:
     """
-    # req_json = request.get_json()
-    # user_id = req_json.get("user_id")
-
     if not user_id:
         return jsonify(code=400, msg="参数不完整")
     user = User.query.get(user_id)
@@ -31,9 +28,13 @@ def get_profile(user_id):
         return jsonify(code=400, msg="查询不到用户")
 
     # 将数据转换为json字符串
-    resp_dict = dict(code=200, msg="查询用户信息成功!", data=user.to_dict())
-    resp_json = json.dumps(resp_dict)
-    return resp_json, 200, {"Content-Type": "application/json"}
+    try:
+        resp_dict = dict(code=200, msg="查询用户信息成功!", data=user.to_dict())
+        resp_json = json.dumps(resp_dict)
+        return resp_json, 200, {"Content-Type": "application/json"}
+    except Exception as e:
+        print(e)
+        return jsonify(code=4000, msg="出错了", data=[])
 
 
 # 设置用户的头像
@@ -48,7 +49,6 @@ def update_user_avatar():
 
     # 装饰器的代码中已经将user_id保存到g对象中，所以视图中可以直接读取
     user_id = g.user_id
-
     # 获取图片
     image_file = request.files.get("avatar")
 

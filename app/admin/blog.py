@@ -6,7 +6,16 @@ from app.utils.tool import admin_login_required
 @admin.route("/blog/article", methods=["POST"])
 @admin_login_required
 def post_blog_article():
+    """
+    title
+    content
+    summary
+    logo
+    author_id
+    :return: 
+    """
     pass
+    
 
 
 # 获取博客详情

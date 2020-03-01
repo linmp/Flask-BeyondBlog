@@ -4,11 +4,10 @@ from app import db, redis_store
 from app.models import User, UserLoginLog, UserOperateLog
 from app.utils.tool import user_login_required
 
-
-# 注册
+"""# 注册
 @main.route("/register", methods=["POST"])
 def register():
-    """注册"""
+    """"""
     # 获取请求的json数据，返回字典
     req_dict = request.get_json()
     email = req_dict.get("email")
@@ -78,6 +77,95 @@ def register():
     session["user_id"] = user.id
 
     # 返回结果
+    return jsonify(code=200, msg="注册成功")"""
+
+
+# 发送短信
+@main.route("/send/sms", methods=["POST"])
+def send_sms():
+    """
+    发送短信
+        图片验证码
+        图片验证码id
+        手机号没被注册
+    :return:
+    """
+    req_json = request.get_json()
+    pass
+
+
+# 注册
+@main.route("/register", methods=["POST"])
+def register():
+    """注册"""
+    req_dict = request.get_json()
+    phone = req_dict.get("phone")
+    password = req_dict.get("password")
+    password2 = req_dict.get("password2")
+    image_code = req_dict.get("image_code")
+    image_code_id = req_dict.get("image_code_id")
+
+    # 校验参数
+    if not all([phone, password, password2, image_code, image_code_id]):
+        return jsonify(code=400, msg="参数不完整")
+
+    # 业务逻辑处理
+    # 从redis中取出真实的图片验证码
+    try:
+        real_image_code = redis_store.get("image_code_%s" % image_code_id)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(code=400, msg="redis数据库异常")
+
+    # 判断图片验证码是否过期
+    if real_image_code is None:
+        # 表示图片验证码没有或者过期
+        return jsonify(code=400, msg="图片验证码失效,请刷新重新输入")
+
+    # 删除redis中的图片验证码，防止用户使用同一个图片验证码验证多次
+    try:
+        redis_store.delete("image_code_%s" % image_code_id)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 与用户填写的值进行对比
+    if real_image_code.decode() != image_code.lower():
+        # 表示用户填写错误
+        return jsonify(code=400, msg="图片验证码错误")
+
+    if password != password2:
+        return jsonify(code=400, msg="两次密码不一致")
+
+    # 判断用户的邮箱是否注册过
+    try:
+        user = User.query.filter_by(phone=phone).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(code=400, msg="数据库异常")
+    else:
+        if user is not None:
+            # 表示邮箱已被注册
+            return jsonify(code=400, msg="邮箱已被注册")
+
+    # 保存用户的注册数据到数据库中
+    user = User(username=phone, email=phone)
+
+    user.password = password  # 设置属性
+
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(code=400, msg="查询数据库异常")
+
+    # 保存登录状态到session中
+    session["username"] = phone
+    session["phone"] = phone
+    session["user_id"] = user.id
+
+    # 返回结果
     return jsonify(code=200, msg="注册成功")
 
 
@@ -87,16 +175,15 @@ def login():
     """用户的登录"""
     # 获取参数
     req_dict = request.get_json()
-    email = req_dict.get("email")
+    phone = req_dict.get("phone")
     password = req_dict.get("password")
 
-    # 校验参数
     # 参数完整的校验
-    if not all([email, password]):
+    if not all([phone, password]):
         return jsonify(code=400, msg="参数不完整.")
 
     try:
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(phone=phone).first()
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(code=400, msg="获取用户信息失败")
@@ -111,12 +198,13 @@ def login():
     try:
         db.session.add(user_login_log)
         db.session.commit()
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
 
     # 如果验证相同成功，保存登录状态， 在session中
     session["username"] = user.username
-    session["email"] = user.email
+    session["phone"] = user.phone
     session["user_id"] = user.id
     session["avatar"] = user.avatar
 
@@ -129,13 +217,13 @@ def check_login():
     """检查登陆状态"""
     # 尝试从session中获取用户的名字
     username = session.get("username")
-    email = session.get("email")
+    phone = session.get("phone")
     user_id = session.get('user_id')
     avatar = session.get("avatar")
     # 如果session中数据username名字存在，则表示用户已登录，否则未登录
     if username is not None:
         return jsonify(code=200, msg="true",
-                       data={"username": username, "email": email, "user_id": user_id, "avatar": avatar})
+                       data={"username": username, "phone": phone, "user_id": user_id, "avatar": avatar})
     else:
         return jsonify(code=400, msg="用户未登录")
 
@@ -161,9 +249,8 @@ def change_password():
     password = req_dict.get("password")
     new_password = req_dict.get("new_password")
 
-    # 校验参数
     # 参数完整的校验
-    if not all([new_password, password,username]):
+    if not all([new_password, password, username]):
         return jsonify(code=400, msg="参数不完整.")
 
     try:
@@ -181,13 +268,14 @@ def change_password():
 
     # 添加用户操作日志
     ip_addr = request.remote_addr  # 获取管理员登录的ip
-    operate_detail = "用户id:%r 用户名:%s,修改了密码" % (user.id, username)
+    operate_detail = "修改了密码" % username
     user_operate_log = UserOperateLog(user_id=user.id, ip=ip_addr, detail=operate_detail)
     try:
         db.session.add(user)
         db.session.add(user_operate_log)
         db.session.commit()
-    except:
+    except Exception as e:
+        print(e)
         db.session.rollback()
         return jsonify(code=400, msg="修改密码失败,请稍后重试!")
 
@@ -197,4 +285,9 @@ def change_password():
 # 找回密码
 @main.route("/password", methods=["POST"])
 def find_password():
+    """
+    发送手机号验证码
+    验证成功之后就能填写个新密码
+    :return:
+    """
     pass
