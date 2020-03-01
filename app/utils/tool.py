@@ -18,7 +18,7 @@ def user_login_required(view_func):
             return view_func(*args, **kwargs)
         else:
             # 如果未登录，返回未登录的信息
-            return jsonify(reCode=400, msg="用户未登录")
+            return jsonify(code=400, msg="用户未登录")
 
     return wrapper
 
@@ -37,6 +37,6 @@ def admin_login_required(view_func):
             return view_func(*args, **kwargs)
         else:
             # 如果未登录，返回未登录的信息
-            return jsonify(reCode=400, msg="用户未登录")
+            return jsonify(code=400, msg="用户未登录")
 
     return wrapper

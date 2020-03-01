@@ -1,8 +1,10 @@
 # Flask-Blog-Python3
-An Open Source Blog System that developed with Flask and Python3.
+### An Open Source Blog System that developed with Flask and Python3.
+
 ---
+
 ### 为什么想搭建个博客呢?
-1. 大概去年这个时候我就很想找些博客代码来参考和学习
+1. 大概去年(2018 12月)这个时候我就很想找些博客代码来参考和学习
 2. 想搭建个属于自己的博客
 3. Python3并且是flask搭建的博客很少
 4. **帮助入门的初学者**来学一下完整的一个项目的开发该做的步骤
@@ -46,7 +48,6 @@ An Open Source Blog System that developed with Flask and Python3.
 
 ...
 
-
 ---
 **TODO**
 
@@ -58,6 +59,5 @@ An Open Source Blog System that developed with Flask and Python3.
 - [ ] 日志和用户信息应该加入redis缓存
 - [ ] 数据库暂时设置为本地
 - [ ] 前端搭建
-
 
 ---

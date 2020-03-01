@@ -15,7 +15,7 @@ def create_admin():
     from config_message.constant import ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_AVATAR_URL, ADMIN_POWER
     try:
         admin_new = Admin(username=ADMIN_USERNAME, password=ADMIN_PASSWORD, avatar=ADMIN_AVATAR_URL,
-                          authority=ADMIN_POWER)
+                          power=ADMIN_POWER)
         db.session.add(admin_new)
         db.session.commit()
         print("初始化成功")
