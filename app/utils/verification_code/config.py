@@ -1,2 +1,2 @@
-width = 160
-height = 50
+width = 160  # 宽
+height = 50  # 高

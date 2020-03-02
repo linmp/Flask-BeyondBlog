@@ -40,5 +40,6 @@ def mail(receive_email, url):
         server.sendmail(sender, [receive_email, ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
         server.quit()  # 关闭连接
         return "OK"
-    except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+    except Exception as e:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+        print(e)
         return "ERROR"

@@ -2,7 +2,7 @@ import oss2
 from datetime import datetime
 import random
 
-from .config import OssAccessKeyID,OssAccessKeySecret,OssBucketName,OssEndpoint,OssHttps
+from .config import OssAccessKeyID, OssAccessKeySecret, OssBucketName, OssEndpoint, OssHttps
 
 
 # 上传图片到阿里云的接口
@@ -25,7 +25,8 @@ def upload_pic(path, img):
         get_hz = img.filename.rsplit('.', 1)[1]  # 获取后缀
         randomNum = random.randint(0, 100)
         img.filename = datetime.now().strftime("%Y%m%d%H%M%S") + "_" + str(randomNum) + "." + get_hz
-    except:
+    except Exception as e:
+        print(e)
         img.filename = datetime.now().strftime("%Y%m%d%H%M%S") + img.filename
 
     file_path = path + img.filename  # 拼接文件夹跟更改后的文件名

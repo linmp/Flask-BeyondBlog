@@ -51,3 +51,7 @@ def message():
 @main.route("/blog/search", methods=["POST"])
 def blog_search():
     pass
+
+
+
+

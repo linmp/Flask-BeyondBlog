@@ -2,7 +2,7 @@ from . import main
 import json
 from flask import request, jsonify, current_app, session, g
 from app import db, redis_store
-from app.models import User
+from app.models import User, UserOperateLog
 from app.utils.tool import user_login_required
 from app.utils.alioss import upload
 
@@ -11,14 +11,11 @@ from app.utils.alioss import upload
 @main.route("/user/profile/<int:user_id>", methods=["GET"])
 def get_profile(user_id):
     """
+    id
     用户名
-    性别
     头像
-    个性签名
-    邮箱
     注册时间
     最新上线时间
-    等级
     :return:
     """
     if not user_id:
@@ -30,8 +27,9 @@ def get_profile(user_id):
     # 将数据转换为json字符串
     try:
         resp_dict = dict(code=200, msg="查询用户信息成功!", data=user.to_dict())
-        resp_json = json.dumps(resp_dict)
-        return resp_json, 200, {"Content-Type": "application/json"}
+        return jsonify(resp_dict)
+        # resp_json = json.dumps(resp_dict)
+        # return resp_json, 200, {"Content-Type": "application/json"}
     except Exception as e:
         print(e)
         return jsonify(code=4000, msg="出错了", data=[])
@@ -51,6 +49,7 @@ def update_user_avatar():
     user_id = g.user_id
     # 获取图片
     image_file = request.files.get("avatar")
+    ip_addr = request.remote_addr
 
     if image_file is None:
         return jsonify(code=400, msg="未上传图片")
@@ -66,6 +65,9 @@ def update_user_avatar():
     # 保存图片路由到数据库中
     try:
         User.query.filter_by(id=user_id).update({"avatar": file_name})
+        detail = "更改了头像"
+        user_log = UserOperateLog(user_id=user_id, ip=ip_addr, detail=detail)
+        db.session.add(user_log)
         db.session.commit()
     except Exception as e:
         db.session.rollback()
@@ -94,6 +96,7 @@ def update_username():
     user_id = g.user_id
 
     req_json = request.get_json()
+    ip_addr = request.remote_addr
     username = req_json.get("username")
 
     if username is None:
@@ -107,6 +110,9 @@ def update_username():
     # 更新用户名到数据库中
     try:
         User.query.filter_by(id=user_id).update({"username": username})
+        detail = "更改了用户名: %s" % username
+        user_log = UserOperateLog(user_id=user_id, ip=ip_addr, detail=detail)
+        db.session.add(user_log)
         db.session.commit()
     except Exception as e:
         db.session.rollback()

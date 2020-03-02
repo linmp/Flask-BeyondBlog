@@ -16,6 +16,14 @@ WTF_CSRF_ENABLED = False
 # Redis配置信息
 REDIS_HOST = os.environ.get("REDIS_HOST")
 REDIS_PORT = 6379
+REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD")
 
 # flask-session配置
 PERMANENT_SESSION_LIFETIME = 86400  # 86400 session数据的有效期，单位秒
+
+# 绑定手机号短信多少分内有效(分钟)
+Bind_PHONE_CODE_NEED = 10
+
+# 手机短信内容配置
+SMS_APP_ID = os.environ.get("SMS_APP_ID")
+SMS_APP_KEY = os.environ.get("SMS_APP_KEY")

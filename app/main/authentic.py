@@ -1,97 +1,84 @@
+import random
+
+from config_message import constant
 from . import main
-from flask import request, jsonify, current_app, session
+from flask import request, jsonify, current_app, session, g
 from app import db, redis_store
 from app.models import User, UserLoginLog, UserOperateLog
 from app.utils.tool import user_login_required
+from app.utils.sms import send
 
-"""# 注册
-@main.route("/register", methods=["POST"])
-def register():
-    """"""
-    # 获取请求的json数据，返回字典
-    req_dict = request.get_json()
-    email = req_dict.get("email")
-    password = req_dict.get("password")
-    password2 = req_dict.get("password2")
-    image_code = req_dict.get("image_code")
-    image_code_id = req_dict.get("image_code_id")
 
-    # 校验参数
-    if not all([email, password, password2, image_code, image_code_id]):
-        return jsonify(code=400, msg="参数不完整")
-
-    # 业务逻辑处理
-    # 从redis中取出真实的图片验证码
+# 封装发送验证码
+def send_sms_origin(phone):
+    if not all([phone]):
+        # 表示参数不完整
+        return jsonify(code=4000, msg="参数不完整")
+    # 判断对于这个手机号的操作，在60秒内有没有之前的记录，如果有，则认为用户操作频繁，不接受处理
     try:
-        real_image_code = redis_store.get("image_code_%s" % image_code_id)
+        send_flag = redis_store.get("send_sms_code_%s" % phone)
+    except Exception as e:
+        print(e)
+    else:
+        if send_flag is not None:
+            # 表示在60秒内之前有过发送的记录
+            return jsonify(code=4001, msg="请求过于频繁，请60秒后重试")
+
+    sms_code = random.randint(100000, 999999)  # 生成验证码
+
+    minute = constant.Bind_PHONE_CODE_NEED  # 验证码有效时间
+
+    # 保存真实的短信验证码
+    try:
+        redis_store.setex("sms_code_%s" % phone, minute * 60, sms_code)
+        # 保存发送给这个手机号的记录，防止用户在60s内再次出发发送短信的操作
+        redis_store.setex("send_sms_code_%s" % phone, 60, 1)
     except Exception as e:
         current_app.logger.error(e)
-        return jsonify(code=400, msg="redis数据库异常")
+        return jsonify(code=4003, msg="保存短信验证码异常,请稍后在试")
 
-    # 判断图片验证码是否过期
-    if real_image_code is None:
-        # 表示图片验证码没有或者过期
-        return jsonify(code=400, msg="图片验证码失效,请刷新重新输入")
-
-    # 删除redis中的图片验证码，防止用户使用同一个图片验证码验证多次
+    # 发送验证码
     try:
-        redis_store.delete("image_code_%s" % image_code_id)
+        code = send.send_sms(phone, sms_code, minute)
+        if code == "Ok":
+            return jsonify(code=200, msg="发送成功")
+        else:
+            return jsonify(code=4004, msg="发送失败")
+    except Exception as e:
+        print(e)
+        return jsonify(code=4005, msg="发送异常")
+
+
+# 发送注册验证码
+@main.route("/sms", methods=["POST"])
+def send_sms():
+    req_json = request.get_json()
+    phone = req_json.get("phone")
+    if not all([phone]):
+        # 表示参数不完整
+        return jsonify(code=4000, msg="参数不完整")
+
+    # 判断对于这个手机号的操作，在60秒内有没有之前的记录，如果有，则认为用户操作频繁，不接受处理
+    try:
+        send_flag = redis_store.get("send_sms_code_%s" % phone)
+    except Exception as e:
+        print(e)
+    else:
+        if send_flag is not None:
+            # 表示在60秒内之前有过发送的记录
+            return jsonify(code=4001, msg="请求过于频繁，请60秒后重试")
+
+    # 判断手机号是否存在
+    try:
+        user = User.query.filter_by(phone=phone).first()
     except Exception as e:
         current_app.logger.error(e)
-
-    # 与用户填写的值进行对比
-    if real_image_code.decode() != image_code.lower():
-        # 表示用户填写错误
-        return jsonify(code=400, msg="图片验证码错误")
-
-    if password != password2:
-        return jsonify(code=400, msg="两次密码不一致")
-
-    # 判断用户的邮箱是否注册过
-    try:
-        user = User.query.filter_by(email=email).first()
-    except Exception as e:
-        current_app.logger.error(e)
-        return jsonify(code=400, msg="数据库异常")
     else:
         if user is not None:
-            # 表示邮箱已被注册
-            return jsonify(code=400, msg="邮箱已被注册")
+            # 表示手机号已存在
+            return jsonify(code=4002, msg="手机号已存在")
 
-    # 保存用户的注册数据到数据库中
-    user = User(username=email, email=email)
-
-    user.password = password  # 设置属性
-
-    try:
-        db.session.add(user)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(e)
-        return jsonify(code=400, msg="查询数据库异常")
-
-    # 保存登录状态到session中
-    session["username"] = email
-    session["email"] = email
-    session["user_id"] = user.id
-
-    # 返回结果
-    return jsonify(code=200, msg="注册成功")"""
-
-
-# 发送短信
-@main.route("/send/sms", methods=["POST"])
-def send_sms():
-    """
-    发送短信
-        图片验证码
-        图片验证码id
-        手机号没被注册
-    :return:
-    """
-    req_json = request.get_json()
-    pass
+    return send_sms_origin(phone)
 
 
 # 注册
@@ -102,41 +89,39 @@ def register():
     phone = req_dict.get("phone")
     password = req_dict.get("password")
     password2 = req_dict.get("password2")
-    image_code = req_dict.get("image_code")
-    image_code_id = req_dict.get("image_code_id")
+    sms_code = req_dict.get("sms_code")
+    phone = str(phone)
+    sms_code = str(sms_code)
 
     # 校验参数
-    if not all([phone, password, password2, image_code, image_code_id]):
+    if not all([phone, password, password2, sms_code]):
         return jsonify(code=400, msg="参数不完整")
-
-    # 业务逻辑处理
-    # 从redis中取出真实的图片验证码
-    try:
-        real_image_code = redis_store.get("image_code_%s" % image_code_id)
-    except Exception as e:
-        current_app.logger.error(e)
-        return jsonify(code=400, msg="redis数据库异常")
-
-    # 判断图片验证码是否过期
-    if real_image_code is None:
-        # 表示图片验证码没有或者过期
-        return jsonify(code=400, msg="图片验证码失效,请刷新重新输入")
-
-    # 删除redis中的图片验证码，防止用户使用同一个图片验证码验证多次
-    try:
-        redis_store.delete("image_code_%s" % image_code_id)
-    except Exception as e:
-        current_app.logger.error(e)
-
-    # 与用户填写的值进行对比
-    if real_image_code.decode() != image_code.lower():
-        # 表示用户填写错误
-        return jsonify(code=400, msg="图片验证码错误")
 
     if password != password2:
         return jsonify(code=400, msg="两次密码不一致")
 
-    # 判断用户的邮箱是否注册过
+    # 从redis中取出短信验证码
+    try:
+        real_sms_code = redis_store.get("sms_code_%s" % phone)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(code=4001, msg="读取真实短信验证码异常")
+
+    # 判断短信验证码是否过期
+    if real_sms_code is None:
+        return jsonify(code=4002, msg="短信验证码失效")
+
+    # 删除redis中的短信验证码，防止重复使用校验
+    try:
+        redis_store.delete("sms_code_%s" % phone)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 判断用户填写短信验证码的正确性
+    if real_sms_code != sms_code:
+        return jsonify(code=4003, msg="短信验证码错误")
+
+    # 判断用户的手机是否注册过
     try:
         user = User.query.filter_by(phone=phone).first()
     except Exception as e:
@@ -144,14 +129,12 @@ def register():
         return jsonify(code=400, msg="数据库异常")
     else:
         if user is not None:
-            # 表示邮箱已被注册
-            return jsonify(code=400, msg="邮箱已被注册")
+            # 表示已被注册
+            return jsonify(code=400, msg="手机已被注册")
 
     # 保存用户的注册数据到数据库中
-    user = User(username=phone, email=phone)
-
-    user.password = password  # 设置属性
-
+    avatar = constant.ADMIN_AVATAR_URL  # 用户头像
+    user = User(username=phone, phone=phone, password=password, avatar=avatar)
     try:
         db.session.add(user)
         db.session.commit()
@@ -164,6 +147,7 @@ def register():
     session["username"] = phone
     session["phone"] = phone
     session["user_id"] = user.id
+    session["avatar"] = user.avatar
 
     # 返回结果
     return jsonify(code=200, msg="注册成功")
@@ -244,17 +228,17 @@ def logout():
 def change_password():
     """ 修改密码 """
     # 获取参数
+    uid = g.user_id
     req_dict = request.get_json()
-    username = session.get("username")
     password = req_dict.get("password")
     new_password = req_dict.get("new_password")
 
     # 参数完整的校验
-    if not all([new_password, password, username]):
+    if not all([new_password, password, uid]):
         return jsonify(code=400, msg="参数不完整.")
 
     try:
-        user = User.query.filter_by(username=username).first()
+        user = User.query.get(uid)
     except Exception as e:
         current_app.logger.error(e)
         return jsonify(code=400, msg="获取用户信息失败")
@@ -268,7 +252,7 @@ def change_password():
 
     # 添加用户操作日志
     ip_addr = request.remote_addr  # 获取管理员登录的ip
-    operate_detail = "修改了密码" % username
+    operate_detail = "修改了密码"
     user_operate_log = UserOperateLog(user_id=user.id, ip=ip_addr, detail=operate_detail)
     try:
         db.session.add(user)
@@ -282,6 +266,34 @@ def change_password():
     return jsonify(code=200, msg="修改密码成功!")
 
 
+# 发送找回密码验证码
+@main.route("/reset/password/sms", methods=["POST"])
+def send_find_password_sms():
+    req_dict = request.get_json()
+    phone = req_dict.get("phone")
+
+    # 判断对于这个手机号的操作，在60秒内有没有之前的记录，如果有，则认为用户操作频繁，不接受处理
+    try:
+        send_flag = redis_store.get("send_sms_code_%s" % phone)
+    except Exception as e:
+        print(e)
+    else:
+        if send_flag is not None:
+            # 表示在60秒内之前有过发送的记录
+            return jsonify(code=4001, msg="请求过于频繁，请60秒后重试")
+
+    # 判断手机号是否存在
+    try:
+        user = User.query.filter_by(phone=phone).first()
+    except Exception as e:
+        current_app.logger.error(e)
+    else:
+        if user is not None:
+            # 表示手机号已存在
+            return jsonify(code=4002, msg="手机号已存在")
+    return send_sms_origin(phone=phone)
+
+
 # 找回密码
 @main.route("/password", methods=["POST"])
 def find_password():
@@ -290,4 +302,60 @@ def find_password():
     验证成功之后就能填写个新密码
     :return:
     """
-    pass
+    req_dict = request.get_json()
+    phone = req_dict.get("phone")
+    password = req_dict.get("password")
+    password2 = req_dict.get("password2")
+    sms_code = req_dict.get("sms_code")
+
+    # 校验参数
+    if not all([phone, password, password2, sms_code]):
+        return jsonify(code=400, msg="参数不完整")
+
+    if password != password2:
+        return jsonify(code=400, msg="两次密码不一致")
+
+    # 从redis中取出短信验证码
+    try:
+        real_sms_code = redis_store.get("sms_code_%s" % phone)
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(code=4001, msg="读取真实短信验证码异常")
+
+    # 判断短信验证码是否过期
+    if real_sms_code is None:
+        return jsonify(code=4002, msg="短信验证码失效")
+
+    # 删除redis中的短信验证码，防止重复使用校验
+    try:
+        redis_store.delete("sms_code_%s" % phone)
+    except Exception as e:
+        current_app.logger.error(e)
+
+    # 判断用户填写短信验证码的正确性
+    if real_sms_code != sms_code:
+        return jsonify(code=4003, msg="短信验证码错误")
+
+    # 判断用户是否存在
+    try:
+        user = User.query.filter_by(phone=phone).first()
+    except Exception as e:
+        current_app.logger.error(e)
+        return jsonify(code=400, msg="数据库异常")
+    else:
+        if user is None:
+            # 不存在用户
+            return jsonify(code=400, msg="用户不存在,请注册")
+
+    # 更改用户的密码到数据库中
+    user.password = password
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(e)
+        return jsonify(code=400, msg="查询数据库异常")
+
+    # 返回结果
+    return jsonify(code=200, msg="找回密码成功!")

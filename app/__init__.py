@@ -6,7 +6,6 @@ from flask_wtf import CSRFProtect
 
 import redis
 
-
 # 数据库
 db = SQLAlchemy()
 
@@ -32,7 +31,9 @@ def create_app(config_name):
 
     # 初始化redis工具
     global redis_store
-    redis_store = redis.StrictRedis(host=config_class.REDIS_HOST, port=config_class.REDIS_PORT)
+    # redis_store = redis.StrictRedis(host=config_class.REDIS_HOST, port=config_class.REDIS_PORT)
+    redis_store = redis.StrictRedis(host=config_class.REDIS_HOST, port=config_class.REDIS_PORT,
+                                    password=config_class.REDIS_PASSWORD, db=2, decode_responses=True)
 
     # 利用flask-session，将session数据保存到redis中
     Session(app)
