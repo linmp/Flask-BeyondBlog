@@ -45,6 +45,16 @@ class User(db.Model):
         }
         return user_dict
 
+    def is_normal(self):
+        """
+        判断用户是否能用
+        :return:
+        """
+        if self.status == "正常":
+            return True
+        else:
+            return False
+
 
 # 搜索历史
 class SearchHistory(db.Model):
@@ -154,7 +164,7 @@ class Blog(db.Model):
     status = db.Column(db.Enum("正常", "草稿", "删除"), default="正常", nullable=False)  # 文章状态
     author_id = db.Column(db.Integer, db.ForeignKey('admin.id'))  # 所属博主
 
-    tags = db.relationship("BlogAndTag", backref="blog")  # 标签关系关联
+    tags = db.relationship("Tag", secondary="blog_to_tag", backref="blog")  # 标签关系关联
     blog_followers = db.relationship('CollectBlogArticle', backref='blog')  # 被收藏外键关系关联
     comments = db.relationship('Comment', backref='blog')  # 评论外键关系关联
     page_views = db.Column(db.Integer, default=0)  # 浏览次数
@@ -179,7 +189,6 @@ class BlogAndTag(db.Model):
 class Tag(db.Model):
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)  # 编号
-    blog = db.relationship("BlogAndTag", backref="tags")  # 博客关系关联
     name = db.Column(db.String(32), nullable=False, unique=True)  # 标签名字
     create_time = db.Column(db.DateTime, index=True, default=datetime.now)  # 添加时间
 

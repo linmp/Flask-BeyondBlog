@@ -161,6 +161,7 @@ def login():
     req_dict = request.get_json()
     phone = req_dict.get("phone")
     password = req_dict.get("password")
+    phone = str(phone)
 
     # 参数完整的校验
     if not all([phone, password]):
@@ -175,6 +176,10 @@ def login():
     # 用数据库的密码与用户填写的密码进行对比验证
     if user is None or user.password != password:
         return jsonify(code=400, msg="用户名或密码错误")
+
+    # 账号状态
+    if not user.is_normal():
+        return jsonify(code=400, msg="账号异常")
 
     # 添加用户登录日志
     ip_addr = request.remote_addr  # 获取用户登录的ip
@@ -271,6 +276,7 @@ def change_password():
 def send_find_password_sms():
     req_dict = request.get_json()
     phone = req_dict.get("phone")
+    phone = str(phone)
 
     # 判断对于这个手机号的操作，在60秒内有没有之前的记录，如果有，则认为用户操作频繁，不接受处理
     try:
@@ -282,15 +288,16 @@ def send_find_password_sms():
             # 表示在60秒内之前有过发送的记录
             return jsonify(code=4001, msg="请求过于频繁，请60秒后重试")
 
-    # 判断手机号是否存在
+    # 判断账号是否存在
     try:
         user = User.query.filter_by(phone=phone).first()
     except Exception as e:
         current_app.logger.error(e)
     else:
-        if user is not None:
-            # 表示手机号已存在
-            return jsonify(code=4002, msg="手机号已存在")
+        if user is None or not user.is_normal():
+            # 账号不存在
+            return jsonify(code=4002, msg="账号不存在或账号异常!")
+    # 如果账号存在且正常 发送验证码
     return send_sms_origin(phone=phone)
 
 
@@ -307,6 +314,8 @@ def find_password():
     password = req_dict.get("password")
     password2 = req_dict.get("password2")
     sms_code = req_dict.get("sms_code")
+    phone = str(phone)
+    sms_code = str(sms_code)
 
     # 校验参数
     if not all([phone, password, password2, sms_code]):
@@ -343,14 +352,19 @@ def find_password():
         current_app.logger.error(e)
         return jsonify(code=400, msg="数据库异常")
     else:
-        if user is None:
+        if user is None or not user.is_normal():
             # 不存在用户
-            return jsonify(code=400, msg="用户不存在,请注册")
+            return jsonify(code=400, msg="用户不存在或账号异常,请注册")
 
     # 更改用户的密码到数据库中
     user.password = password
     try:
+        # 添加用户操作日志
+        ip_addr = request.remote_addr  # 获取管理员登录的ip
+        operate_detail = "找回了密码"
+        user_operate_log = UserOperateLog(user_id=user.id, ip=ip_addr, detail=operate_detail)
         db.session.add(user)
+        db.session.add(user_operate_log)
         db.session.commit()
     except Exception as e:
         db.session.rollback()

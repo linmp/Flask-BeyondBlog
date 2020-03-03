@@ -1,7 +1,7 @@
 from . import admin
 from app import db
 from app.utils.tool import admin_login_required
-from app.models import Board, AdminOperateLog, Admin, Tag
+from app.models import Board, AdminOperateLog, Admin, Tag, User
 from config_message.constant import ADMIN_AVATAR_URL
 from flask import g, request, jsonify, session
 
@@ -162,8 +162,38 @@ def delete_manager():
 
 # 屏蔽用户
 @admin.route("/user/status", methods=["DELETE"])
+@admin_login_required
 def delete_user():
-    pass
+    """
+    用户的用户名
+    :return:
+    """
+    admin_id = g.admin_id
+    ip_addr = request.remote_addr  # 获取管理员登录的ip
+    req_dict = request.get_json()
+    delete_user_username = req_dict.get("username")
+
+    # 参数完整的校验
+    if not all([delete_user_username, ip_addr]):
+        return jsonify(code=400, msg="参数不完整")
+
+    user = User.query.filter(username=delete_user_username).first()
+    if user is None:
+        return jsonify(code=400, msg="查询不到用户")
+
+    try:
+        user.status = "删除"
+        db.session.add(user)
+        detail = "屏蔽了用户: %s " % user
+        admin_operate_log = AdminOperateLog(admin_id=admin_id, ip=ip_addr, detail=detail)
+        db.session.add(admin_operate_log)
+        db.session.commit()
+        return jsonify(code=200, msg="删除用户成功!")
+
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify(code=400, msg="执行操作失败")
 
 
 # 删除评论
@@ -215,12 +245,6 @@ def views_numbers_count():
     pass
 
 
-# 任务板
-@admin.route("/task", methods=["POST"])
-def task_board():
-    pass
-
-
 # 查看所有用户略情
 @admin.route("/all/data/user", methods=["POST"])
 def all_user_message():
@@ -252,6 +276,9 @@ def likes_numbers():
 
 
 # 注册用户量
-@admin.route("/register/numbers", methods=["POST"])
+@admin.route("/register/numbers", methods=["GET"])
+@admin_login_required
 def register_number():
-    pass
+    user = User.query.all()
+    number = len(user)
+    return jsonify(code=200, msg="查询成功", register_numbers=number)

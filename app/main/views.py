@@ -53,5 +53,7 @@ def blog_search():
     pass
 
 
-
-
+# 获取博客详情
+@main.route("/blog/article/detail", methods=["GET"])
+def get_article_detail():
+    pass
