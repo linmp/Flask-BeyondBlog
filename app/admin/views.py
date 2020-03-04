@@ -1,7 +1,7 @@
 from . import admin
 from app import db
 from app.utils.tool import admin_login_required
-from app.models import Board, AdminOperateLog, Admin, Tag, User
+from app.models import Board, AdminOperateLog, Admin, Tag, User, Blog
 from config_message.constant import ADMIN_AVATAR_URL
 from flask import g, request, jsonify, session
 
@@ -266,7 +266,8 @@ def login_numbers():
 # 发博总数
 @admin.route("/blog/numbers", methods=["POST"])
 def blog_numbers():
-    pass
+    blog = Blog.query.filter_by(Blog.status == "正常").all()
+    return jsonify(code=200, number=len(blog))
 
 
 # 总赞数
