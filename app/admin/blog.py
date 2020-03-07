@@ -25,6 +25,7 @@ def post_blog_article():
     status = req_data.get("status")  # 状态 "正常", "草稿"
 
     tags = req_data.get("tags")  # ["name","name"]
+    print(tags)
 
     if not all([title, content, summary, tags]):
         return jsonify(code=4000, msg="参数不完整")
@@ -33,13 +34,17 @@ def post_blog_article():
         return jsonify(code=4001, msg="参数出错")
 
     try:
-        blog = Blog(title=title, content=content, summary=summary, author_id=admin_id)
+        blog = Blog(title=title, content=content, summary=summary, author_id=admin_id, status=status)
         # 查询标签添加博客标签
         t = Tag.query.filter(Tag.name.in_(tags)).all()
+        print(t, "sss")
         blog.tags = t
-        detail = "添加了博客: %s " % title
+        if status == "草稿":
+            detail = "添加草稿: %s " % title
+        else:
+            detail = "发布博客: %s " % title
         admin_operate_log = AdminOperateLog(admin_id=admin_id, ip=ip_addr, detail=detail)
-        db.session.add(t)
+        db.session.add(blog)
         db.session.add(admin_operate_log)
         db.session.commit()
 
@@ -62,7 +67,7 @@ def delete_blog_article():
     """
     req_data = request.get_json()
     ip_addr = request.remote_addr
-    status = req_data.get("status")  # 博客状态
+    status = req_data.get("status")  # 博客状态 "正常", "草稿", "删除"
     bid = req_data.get("id")  # 博客id
     admin_id = g.admin_id  # 博主id
 
@@ -79,6 +84,10 @@ def delete_blog_article():
     # 如果 不是超级管理员 也不是作者 那么出错
     if blog.author_id != admin_id and admin_id != 1:
         return jsonify(code=4002, msg="你不是作者")
+
+    if blog.status == status:
+        return jsonify(code=200, msg="操作成功")
+
 
     detail = "修改了文章状态: %s --> %s " % (blog.status, status)
     try:

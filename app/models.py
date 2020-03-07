@@ -87,7 +87,7 @@ class Message(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 发送者
     recipient_id = db.Column(db.Integer, db.ForeignKey('admin.id'))  # 接收者
     content = db.Column(db.Text)  # 内容
-    create_time = db.Column(db.DateTime, index=True, default=datetime.now)  # 添加时间
+    create_time = db.Column(db.DateTime, default=datetime.now)  # 添加时间
 
     def __repr__(self):
         return "<Message %r to %r >" % self.sender_id, self.recipient_id

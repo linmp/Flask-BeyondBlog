@@ -1,6 +1,6 @@
 from . import main
 from app import db, redis_store
-from app.models import User, Blog, UserOperateLog
+from app.models import User, Blog, UserOperateLog, Message
 from flask import request, jsonify, current_app, session, g
 from app.utils.tool import user_login_required
 
@@ -43,8 +43,27 @@ def make_unlike():
 
 # 反馈
 @main.route("/message", methods=["POST"])
+@user_login_required
 def message():
-    pass
+    req_json = request.get_json()
+    ip_addr = request.remote_addr
+    sender_id = g.user_id
+    recipient_id = req_json.get("recipient_id")
+    content = req_json.get("content")
+    if not all([sender_id, recipient_id, content, ip_addr]):
+        return jsonify(code=4000, msg="参数不完整")
+    msg = Message(sender_id=sender_id, recipient_id=recipient_id, content=content)
+    try:
+        db.session.add(msg)
+        detail = "提交了反馈留言"
+        user_log = UserOperateLog(user_id=sender_id, ip=ip_addr, detail=detail)
+        db.session.add(user_log)
+        db.session.commit()
+        return jsonify(code=200, msg="你的反馈发送成功,感谢你的反馈")
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify(code=400, msg="操作数据库失败,请稍后再试")
 
 
 # 搜索
