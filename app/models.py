@@ -100,7 +100,7 @@ class Comment(db.Model):
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 发送者
     content = db.Column(db.Text)  # 评论内容
     blog_id = db.Column(db.Integer, db.ForeignKey('blog.id'))  # 所属博客文章
-    create_time = db.Column(db.DateTime, index=True, default=datetime.now)  # 添加时间
+    create_time = db.Column(db.DateTime, default=datetime.now)  # 添加时间
 
     def __repr__(self):
         return "<Comment %r>" % self.id
@@ -175,6 +175,25 @@ class Blog(db.Model):
 
     def __repr__(self):
         return "<Blog %r>" % self.id
+
+    def to_dict(self):
+        """将对象转换为字典数据"""
+
+        user_dict = {
+            "blog_id": self.id,
+            "title": self.title,
+            "content": self.content,
+            "summary": self.summary,
+            "logo": self.logo,
+            "author_id": self.author_id,
+            "page_views": self.page_views,
+            "like_numbers": self.like_numbers,
+            "comment_numbers": self.comment_numbers,
+            "tags": [tag.name for tag in self.tags],
+            "create_time": self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "update_time": self.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        return user_dict
 
 
 # 博客 标签第三表
