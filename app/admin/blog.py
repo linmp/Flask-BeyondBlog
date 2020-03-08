@@ -25,7 +25,6 @@ def post_blog_article():
     status = req_data.get("status")  # 状态 "正常", "草稿"
 
     tags = req_data.get("tags")  # ["name","name"]
-    print(tags)
 
     if not all([title, content, summary, tags]):
         return jsonify(code=4000, msg="参数不完整")
@@ -37,7 +36,6 @@ def post_blog_article():
         blog = Blog(title=title, content=content, summary=summary, author_id=admin_id, status=status)
         # 查询标签添加博客标签
         t = Tag.query.filter(Tag.name.in_(tags)).all()
-        print(t, "sss")
         blog.tags = t
         if status == "草稿":
             detail = "添加草稿: %s " % title
@@ -53,7 +51,7 @@ def post_blog_article():
         db.session.rollback()
         return jsonify(code=4002, msg="操作出错,数据库出错")
 
-    return jsonify(code=200, msg="操作成功")
+    return jsonify(code=200, msg="操作成功", id=blog.id)
 
 
 # 修改博客状态
@@ -87,7 +85,6 @@ def delete_blog_article():
 
     if blog.status == status:
         return jsonify(code=200, msg="操作成功")
-
 
     detail = "修改了文章状态: %s --> %s " % (blog.status, status)
     try:

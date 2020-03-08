@@ -22,7 +22,6 @@ class User(db.Model):
     update_time = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)  # 记录的最近上线时间
 
     blog_col = db.relationship('CollectBlogArticle', backref='user')  # 博客收藏外键关系关联
-    search_history = db.relationship('SearchHistory', backref='user')  # 搜索历史外键关系关联
     user_operate_log = db.relationship('UserOperateLog', backref='user')  # 用户操作日志关联
     user_login_log = db.relationship('UserLoginLog', backref='user')  # 用户登录日志关联
     reply_sent = db.relationship('Comment', foreign_keys='Comment.sender_id',
@@ -56,19 +55,18 @@ class User(db.Model):
             return False
 
 
-# 搜索历史
+# 搜索历史 收集用户的搜索查询大致方向
 class SearchHistory(db.Model):
     __tablename__ = "search_history"
     id = db.Column(db.Integer, primary_key=True)  # 编号
     keyword = db.Column(db.TEXT)  # 搜索内容
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 所属用户
     create_time = db.Column(db.DateTime, default=datetime.now)  # 记录添加时间
 
     def __repr__(self):
         return "<SearchHistory %r>" % self.id
 
 
-# 收藏文章
+# 收藏文章 查看自己收藏的文章
 class CollectBlogArticle(db.Model):
     __tablename__ = "collect_blog_article"
     id = db.Column(db.Integer, primary_key=True)  # 编号
@@ -80,7 +78,7 @@ class CollectBlogArticle(db.Model):
         return "<CollectBlogArticle %r>" % self.user_id
 
 
-# 反馈
+# 反馈 可以通过文章页面反馈信息给博主们
 class Message(db.Model):
     __tablename__ = 'message'
     id = db.Column(db.Integer, primary_key=True)  # 编号
@@ -91,6 +89,15 @@ class Message(db.Model):
 
     def __repr__(self):
         return "<Message %r to %r >" % self.sender_id, self.recipient_id
+
+    def to_dict(self):
+        message = {
+            "message_id": self.id,
+            "sender_id": self.sender_id,
+            "content": self.content,
+            "create_time": self.create_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        return message
 
 
 # 评论博客

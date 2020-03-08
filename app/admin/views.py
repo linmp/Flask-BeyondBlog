@@ -1,7 +1,7 @@
 from . import admin
 from app import db
 from app.utils.tool import admin_login_required
-from app.models import Board, AdminOperateLog, Admin, Tag, User, Blog
+from app.models import Board, AdminOperateLog, Admin, Tag, User, Blog, Comment, Message
 from config_message.constant import ADMIN_AVATAR_URL
 from flask import g, request, jsonify, session
 
@@ -177,7 +177,7 @@ def delete_user():
     if not all([delete_user_username, ip_addr]):
         return jsonify(code=400, msg="参数不完整")
 
-    user = User.query.filter(username=delete_user_username).first()
+    user = User.query.filter(User.username==delete_user_username).first()
     if user is None:
         return jsonify(code=400, msg="查询不到用户")
 
@@ -198,11 +198,32 @@ def delete_user():
 
 # 删除评论
 @admin.route("/comment", methods=["DELETE"])
+@admin_login_required
 def delete_comment():
-    pass
+    req_json = request.get_json()
+    ip_addr = request.remote_addr
+    admin_id = g.admin_id
+    comment_id = req_json.get("comment_id")
+    if not all([admin_id, comment_id, ip_addr]):
+        return jsonify(code=4000, msg="参数不完整")
+
+    try:
+        # 删除评论
+        blog = Comment.query.filter(Comment.id == comment_id).delete()
+        if blog != 1:
+            return jsonify(code=400, msg="删除评论失败，评论不存在")
+        detail = "删除了评论 %d " % comment_id
+        user_log = AdminOperateLog(admin_id=admin_id, ip=ip_addr, detail=detail)
+        db.session.add(user_log)
+        db.session.commit()
+        return jsonify(code=200, msg="删除了评论成功")
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        return jsonify(code=400, msg="删除评论失败，请稍后再试")
 
 
-# 更改背景
+# 更改背景 //
 @admin.route("/background", methods=["POST"])
 def change_background():
     pass
@@ -240,24 +261,47 @@ def bulletin_board():
 
 
 # 统计浏览量
-@admin.route("/views/numbers", methods=["POST"])
+@admin.route("/views/numbers", methods=["GET"])
 def views_numbers_count():
-    pass
+    blogs = Blog.query.filter(Blog.status == "正常").all()
+    number = 0
+    for blog in blogs:
+        number += blog.page_views
+    return jsonify(code=200, msg="查询成功", number=number)
 
 
 # 查看所有用户略情
-@admin.route("/all/data/user", methods=["POST"])
-def all_user_message():
-    pass
+@admin.route("/all/user/<int:page>", methods=["GET"])
+@admin_login_required
+def all_user_message(page):
+    per_page = 20
+    users = User.query.paginate(page=page, per_page=per_page)
+    content = []
+    for user in users.items:
+        content.append(user.to_dict())
+    total_page = users.pages
+    return jsonify(code=200, msg="查询成功", data=content, total_page=total_page)
 
 
 # 查看所有的反馈信息
-@admin.route("/feedback", methods=["POST"])
-def feed_back():
-    pass
+@admin.route("/feedback/<int:page>", methods=["GET"])
+@admin_login_required
+def feed_back(page):
+    """
+    获取所有的反馈信息
+    :return:
+    """
+    per_page = 20
+    messages = Message.query.paginate(page, per_page, False)
+
+    content = []
+    for message in messages.items:
+        content.append(message.to_dict())
+
+    return jsonify(code=200, msg='查看反馈信息成功', data=content, total_page=messages.pages)
 
 
-# 活跃人数
+# 活跃人数 //
 @admin.route("/login/numbers", methods=["POST"])
 def login_numbers():
     pass
@@ -270,7 +314,7 @@ def blog_numbers():
     return jsonify(code=200, number=len(blog))
 
 
-# 总赞数
+# 总赞数 //
 @admin.route("/likes/numbers", methods=["POST"])
 def likes_numbers():
     pass

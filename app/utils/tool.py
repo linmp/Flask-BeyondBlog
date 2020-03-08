@@ -22,6 +22,7 @@ def user_login_required(view_func):
 
     return wrapper
 
+
 # 定义的验证登录状态的装饰器
 def admin_login_required(view_func):
     # wraps函数的作用是将wrapper内层函数的属性设置为被装饰函数view_func的属性

@@ -74,9 +74,9 @@ def blog_collect():
 
     # 查询是否已经收藏
     try:
-        bc_find = CollectBlogArticle.query_filter(CollectBlogArticle.user_id == user_id,
+        bc_find = CollectBlogArticle.query.filter(CollectBlogArticle.user_id == user_id,
                                                   CollectBlogArticle.blog_id == blog_id).first()
-        if bc_find:
+        if bc_find is not None:
             return jsonify(code=4002, msg="你已经收藏")
     except Exception as e:
         print(e)
@@ -173,11 +173,6 @@ def blog_search(page):
 # 获取博客详情
 @main.route("/blog/article/detail/<int:blog_id>", methods=["GET", "POST"])
 def get_article_detail(blog_id):
-    # req_json = request.get_json()
-    # blog_id = req_json.get('blog_id')
-    # if not blog_id:
-    #     return jsonify(code=4000, msg="参数缺失")
-    # 查询博客
     blog = Blog.query.get(blog_id)
     if blog is None or blog.status != "正常":
         return jsonify(code=4001, msg="博客不存在")
