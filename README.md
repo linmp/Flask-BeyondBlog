@@ -23,41 +23,56 @@
 #### 管理员
 
 1. 登录  /admin/login
-2. 登录状态  /admin/session
+2. 检查登陆状态  /admin/session
 3. 登出  /admin/session
 4. 发送公告  /admin/bulletin/board
 5. 获取登录日志  /admin/login/log
 6. 获取操作日志 /admin/operate/log
 7. 添加管理员 /admin/ manager
 8. 删除管理员 /admin/ manager
+9. 新增标签  /tag
+10. 删除标签  /tag
+11. 屏蔽用户  /user/status
+12. 删除评论   /comment
+13. 统计浏览量   /views/numbers
+14. 查看所有用户略情   /all/user/<int:page>
+15. 查看所有的反馈信息  /feedback/<int:page>"
+16. 发博总数   /blog/numbers
+17. 注册用户量  /register/numbers
+18. 发表博客  /blog/article
+19. 修改博客状态  /blog/article/status
 
 ...
 
 
 #### 用户
 
+- 发送注册验证码  /main/sms
+- 注册  /main/register
 - 登录  /main/login
 - 登录状态  /main/session
 - 登出  /main/session
 - 修改密码  /main/password
-- 获取某用户的信息 /main/user/profile/<user_id>
-- 修改头像 /main/user/avatar
-- 修改用户名 /main/user/username
-- 修改个人简介 /main/user/info
-- 修改性别 /main/user/gender
+- 发送找回密码验证码   /main/reset/password/sms
+- 找回密码   /main/password
+- 获取个人信息 /main/user/profile/<user_id>
+- 设置用户的头像 /main/user/avatar
+- 修改用户的用户名 /main/user/username
+- 评论  /main/comment
+- 删自己评论  /main/comment
+- 收藏博客   /main/blog/collect
+- 取消收藏博客  /main/blog/collect
+- 反馈  /main/message
+- 搜索  /main/blog/search/<int:page>
+- 获取博客详情 /main /blog/article/detail/<int:blog_id>
 
 ...
 
 ---
 **TODO**
 
-
-- [ ] 验证码注册
 - [ ] 异步celery使用
-- [ ] 异步发送邮箱
-- [ ] 添加websocket
 - [ ] 日志和用户信息应该加入redis缓存
-- [ ] 数据库暂时设置为本地
 - [ ] 前端搭建
 
 ---
