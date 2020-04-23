@@ -56,9 +56,10 @@ def send_sms(phone_number, code, minute):
         # 帮助链接：
         # 短信控制台: https://console.cloud.tencent.com/sms/smslist
         # sms helper: https://cloud.tencent.com/document/product/382/3773
-
+	
+	# 以下信息根据需要进行更改
         # 短信应用ID: 短信SdkAppid在 [短信控制台] 添加应用后生成的实际SdkAppid，示例如1400006666
-        req.SmsSdkAppid = "1400311239"
+        req.SmsSdkAppid = "1400311239" 
         # 短信签名内容: 使用 UTF-8 编码，必须填写已审核通过的签名，签名信息可登录 [短信控制台] 查看
         req.Sign = "你的叮当猫"
         # 短信码号扩展号: 默认未开通，如需开通请联系 [sms helper]
@@ -98,7 +99,7 @@ def send_sms(phone_number, code, minute):
 
 
 if __name__ == '__main__':
-    phone = 13557605531
+    phone = 13025133644
     code = 520520
     minute = 10
     a = send_sms(phone_number=phone, code=code, minute=minute)

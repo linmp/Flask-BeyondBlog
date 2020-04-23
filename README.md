@@ -76,3 +76,16 @@
 - [ ] 前端搭建
 
 ---
+#### 快速上手
+创建虚拟环境
+> python3 -m venv venv
+
+激活虚拟环境
+
+> source venv/bin/activate
+
+安装第三方包
+> pip install -r requirements.txt 
+
+运行命令
+> python manage.py runserver
