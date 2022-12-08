@@ -2,7 +2,7 @@ alembic==1.4.2
 aliyun-python-sdk-core==2.13.10
 aliyun-python-sdk-core-v3==2.13.10
 aliyun-python-sdk-kms==2.8.0
-certifi==2020.4.5.1
+certifi==2022.12.7
 chardet==3.0.4
 click==7.1.1
 crcmod==1.7
